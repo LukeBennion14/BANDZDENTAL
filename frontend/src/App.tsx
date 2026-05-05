@@ -9,14 +9,23 @@ import PatientProfile from './pages/PatientProfile'
 import PatientReview from './pages/PatientReview'
 import ReviewQueue from './pages/ReviewQueue'
 import Settings from './pages/Settings'
+import Login from './pages/Login'
+import Landing from './pages/Landing'
+import { getSession } from './auth'
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  return getSession() ? <>{children}</> : <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
     <ToastProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/app" element={<RequireAuth><Layout /></RequireAuth>}>
+            <Route index element={<Navigate to="/app/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="insight" element={<Insights />} />
             <Route path="schedule" element={<Schedule />} />

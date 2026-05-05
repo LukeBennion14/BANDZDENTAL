@@ -1,16 +1,24 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { Home, BarChart3, Calendar, Users, ClipboardCheck, Settings, LogOut } from 'lucide-react';
+import { clearSession } from '../auth';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: Home },
-  { path: '/insight', label: 'Insight', icon: BarChart3 },
-  { path: '/schedule', label: 'Schedule', icon: Calendar },
-  { path: '/patients', label: 'Patients', icon: Users },
-  { path: '/review', label: 'Review', icon: ClipboardCheck },
-  { path: '/settings', label: 'Settings', icon: Settings },
+  { path: '/app/dashboard', label: 'Dashboard', icon: Home },
+  { path: '/app/insight', label: 'Insight', icon: BarChart3 },
+  { path: '/app/schedule', label: 'Schedule', icon: Calendar },
+  { path: '/app/patients', label: 'Patients', icon: Users },
+  { path: '/app/review', label: 'Review', icon: ClipboardCheck },
+  { path: '/app/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    clearSession();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <aside className="w-[180px] min-h-screen bg-bg-secondary flex flex-col">
       {/* Logo - pushed down from top */}
@@ -49,6 +57,7 @@ export default function Sidebar() {
           {/* Logout - same styling and gap-5 as other nav items */}
           <li>
             <button
+              onClick={handleLogout}
               className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-white/85 hover:bg-white/5 hover:text-white w-full"
             >
               <LogOut size={20} strokeWidth={1.5} />
