@@ -67,12 +67,8 @@ export default function Sidebar() {
                   transition: 'background-color 120ms ease, color 120ms ease',
                 })}
               >
-                {({ isActive }) => (
-                  <>
-                    <item.icon size={18} strokeWidth={1.75} />
-                    <span>{item.label}</span>
-                  </>
-                )}
+                <item.icon size={18} strokeWidth={1.75} />
+                <span>{item.label}</span>
               </NavLink>
             </li>
           ))}
