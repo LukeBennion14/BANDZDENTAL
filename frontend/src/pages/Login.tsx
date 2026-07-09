@@ -4,6 +4,22 @@ import { fetchAPI } from '../api/config';
 import { saveSession } from '../auth';
 import type { OrthoSession } from '../auth';
 
+const NAV_LINKS: { label: string; to: string }[] = [
+  { label: 'Product', to: '/' },
+  { label: 'Features', to: '/' },
+  { label: 'Pricing', to: '/pricing' },
+  { label: 'For Clinics', to: '/' },
+  { label: 'Support', to: '/' },
+];
+
+const APPLE_FONT =
+  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif';
+
+const ACCENT = '#4ade80';
+const ACCENT_HOVER = '#22c55e';
+const TEXT_PRIMARY = '#f5f5f7';
+const TEXT_MUTED = '#86868b';
+
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -33,104 +49,411 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl lg:grid-cols-12">
-
-        {/* ── Left panel ── */}
-        <aside className="hidden border-r border-border px-12 lg:col-span-5 lg:flex lg:flex-col lg:justify-between lg:py-14">
-          <img src="/BANDZLOGO.jpg" alt="BANDZ" className="h-9 w-auto object-contain mix-blend-screen" />
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-green-primary">Practice Portal</p>
-            <h2 className="mt-5 text-4xl font-light leading-[1.1] tracking-tight">
-              Guide every patient toward consistent wear.
-            </h2>
-            <p className="mt-5 text-base leading-7 text-text-secondary">
-              Built for busy orthodontic teams who need quick reviews, clear next steps, and better patient outcomes.
-            </p>
-          </div>
+    <div
+      style={{
+        minHeight: '100vh',
+        background: '#000000',
+        color: TEXT_PRIMARY,
+        fontFamily: APPLE_FONT,
+        WebkitFontSmoothing: 'antialiased',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* ── Nav (mirrors Landing) ── */}
+      <nav
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 30,
+          width: '100%',
+          background: 'rgba(0,0,0,0.72)',
+          backdropFilter: 'saturate(180%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+        }}
+      >
+        <div
+          style={{
+            margin: '0 auto',
+            maxWidth: '1024px',
+            height: '48px',
+            padding: '0 22px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '32px',
+            fontSize: '14px',
+            color: TEXT_PRIMARY,
+          }}
+        >
           <button
             onClick={() => navigate('/')}
-            className="self-start text-sm text-text-muted transition-colors hover:text-text-secondary"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label="BANDZ"
           >
-            ← Back to bandzdental.com
-          </button>
-        </aside>
-
-        {/* ── Right panel ── */}
-        <main className="flex items-center justify-center px-6 py-12 sm:px-10 lg:col-span-7">
-          <div className="w-full max-w-sm">
-
             <img
               src="/BANDZLOGO.jpg"
               alt="BANDZ"
-              className="mb-10 h-9 w-auto object-contain mix-blend-screen lg:hidden"
+              style={{
+                height: '26px',
+                width: 'auto',
+                objectFit: 'contain',
+                mixBlendMode: 'screen',
+              }}
+            />
+          </button>
+          <div style={{ display: 'contents' }}>
+            {NAV_LINKS.map((link) => (
+              <button
+                key={link.label}
+                onClick={() => navigate(link.to)}
+                style={{
+                  fontSize: '12px',
+                  color: TEXT_PRIMARY,
+                  opacity: 0.88,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontFamily: APPLE_FONT,
+                }}
+              >
+                {link.label}
+              </button>
+            ))}
+            <button
+              onClick={() => navigate('/')}
+              style={{
+                fontSize: '12px',
+                color: TEXT_PRIMARY,
+                opacity: 0.88,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              Home
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Centered form section ── */}
+      <main
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '80px 22px 120px',
+        }}
+      >
+        <div
+          style={{
+            width: '100%',
+            maxWidth: '480px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+          }}
+        >
+          <img
+            src="/BANDZLOGO.jpg"
+            alt="BANDZ"
+            style={{
+              height: '72px',
+              width: 'auto',
+              objectFit: 'contain',
+              mixBlendMode: 'screen',
+              marginBottom: '32px',
+            }}
+          />
+
+          <h1
+            style={{
+              fontFamily: APPLE_FONT,
+              fontWeight: 600,
+              fontSize: 'clamp(36px, 4.5vw, 56px)',
+              lineHeight: 1.07,
+              letterSpacing: '-0.005em',
+              color: TEXT_PRIMARY,
+              margin: 0,
+            }}
+          >
+            {wantsSignup ? 'Create your account.' : 'Welcome back.'}
+          </h1>
+          <p
+            style={{
+              fontFamily: APPLE_FONT,
+              fontSize: '19px',
+              lineHeight: 1.4,
+              letterSpacing: '0.011em',
+              color: TEXT_PRIMARY,
+              opacity: 0.72,
+              marginTop: '16px',
+              marginBottom: '48px',
+              maxWidth: '400px',
+            }}
+          >
+            {wantsSignup
+              ? 'Set up your practice workspace in minutes.'
+              : 'Sign in to continue to your dashboard.'}
+          </p>
+
+          <form
+            onSubmit={handleLogin}
+            style={{
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+          >
+            <ApplePillInput
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(v) => setEmail(v)}
+            />
+            <ApplePillInput
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(v) => setPassword(v)}
             />
 
-            {/* Form card */}
-            <div className="border border-border bg-bg-secondary px-8 py-10">
-              <h1 className="text-xl font-semibold tracking-tight">
-                {wantsSignup ? 'Create your account' : 'Sign in to BANDZ'}
-              </h1>
-              <p className="mt-2 text-sm text-text-secondary">
-                {wantsSignup
-                  ? 'Set up your practice workspace in minutes.'
-                  : 'Welcome back. Continue to your dashboard.'}
-              </p>
-
-              <form onSubmit={handleLogin} className="mt-8 flex flex-col gap-4">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="h-12 w-full border border-border bg-bg-tertiary px-4 text-sm text-text-primary placeholder:text-text-muted focus:border-green-primary/60 focus:outline-none transition-colors"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="h-12 w-full border border-border bg-bg-tertiary px-4 text-sm text-text-primary placeholder:text-text-muted focus:border-green-primary/60 focus:outline-none transition-colors"
-                  required
-                />
-
-                {error && (
-                  <p className="rounded border border-red-accent/30 bg-red-accent/10 px-4 py-3 text-sm text-red-accent">
-                    {error}
-                  </p>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="h-12 w-full bg-green-primary text-sm font-bold text-black transition-colors hover:bg-green-secondary disabled:opacity-50"
-                >
-                  {loading ? 'Signing in…' : 'Sign In'}
-                </button>
-              </form>
-
-              <button className="mt-5 text-sm text-text-muted transition-colors hover:text-text-secondary">
-                Forgot password?
-              </button>
-            </div>
-
-            {/* Bottom card */}
-            <div className="mt-3 border border-border bg-bg-secondary px-8 py-5 text-center">
-              <button
-                onClick={() => navigate('/')}
-                className="text-sm text-text-secondary transition-colors hover:text-green-primary lg:hidden"
+            {error && (
+              <p
+                style={{
+                  fontFamily: APPLE_FONT,
+                  fontSize: '14px',
+                  color: '#ff6b6b',
+                  background: 'rgba(255,107,107,0.08)',
+                  border: '1px solid rgba(255,107,107,0.24)',
+                  borderRadius: '14px',
+                  padding: '14px 20px',
+                  margin: 0,
+                  textAlign: 'left',
+                }}
               >
-                ← Back to BANDZ.com
-              </button>
-              <p className="hidden text-xs text-text-muted lg:block">
-                Secure access for orthodontic staff and clinicians.
+                {error}
               </p>
-            </div>
+            )}
 
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginTop: '16px',
+              }}
+            >
+              <PillButton primary type="submit" disabled={loading} fullWidth>
+                {loading
+                  ? 'Signing in…'
+                  : wantsSignup
+                  ? 'Create account'
+                  : 'Sign in'}
+              </PillButton>
+            </div>
+          </form>
+
+          <button
+            type="button"
+            style={{
+              marginTop: '28px',
+              fontFamily: APPLE_FONT,
+              fontSize: '14px',
+              color: ACCENT,
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
+            Forgot password?
+          </button>
+
+          <div
+            style={{
+              marginTop: '48px',
+              paddingTop: '32px',
+              borderTop: '1px solid rgba(255,255,255,0.08)',
+              width: '100%',
+              fontFamily: APPLE_FONT,
+              fontSize: '14px',
+              color: TEXT_MUTED,
+            }}
+          >
+            {wantsSignup ? 'Already have an account? ' : "Don't have an account? "}
+            <button
+              type="button"
+              onClick={() =>
+                navigate(wantsSignup ? '/login' : '/login?tab=signup')
+              }
+              style={{
+                color: ACCENT,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                fontSize: '14px',
+                fontFamily: APPLE_FONT,
+              }}
+            >
+              {wantsSignup ? 'Sign in' : 'Create one'}
+            </button>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer
+        style={{
+          background: '#000000',
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          fontSize: '12px',
+          color: TEXT_MUTED,
+        }}
+      >
+        <div
+          style={{
+            margin: '0 auto',
+            maxWidth: '1024px',
+            padding: '32px 22px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>Copyright © {new Date().getFullYear()} BANDZ Dental. All rights reserved.</span>
+          <span>bandzdental.com</span>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function ApplePillInput({
+  type,
+  placeholder,
+  value,
+  onChange,
+}: {
+  type: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <input
+      type={type}
+      placeholder={placeholder}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      required
+      style={{
+        fontFamily: APPLE_FONT,
+        width: '100%',
+        height: '60px',
+        padding: '0 24px',
+        fontSize: '17px',
+        letterSpacing: '-0.012em',
+        color: TEXT_PRIMARY,
+        background: '#161617',
+        border: focused
+          ? `1px solid ${ACCENT}`
+          : '1px solid rgba(255,255,255,0.10)',
+        borderRadius: '980px',
+        outline: 'none',
+        transition: 'border-color 120ms ease, background 120ms ease',
+        boxSizing: 'border-box',
+      }}
+    />
+  );
+}
+
+function PillButton({
+  children,
+  primary,
+  onClick,
+  type,
+  disabled,
+  fullWidth,
+}: {
+  children: React.ReactNode;
+  primary?: boolean;
+  onClick?: () => void;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  fullWidth?: boolean;
+}) {
+  const base: React.CSSProperties = {
+    fontFamily: APPLE_FONT,
+    fontSize: '17px',
+    fontWeight: 500,
+    lineHeight: 1,
+    padding: '18px 32px',
+    minWidth: fullWidth ? '100%' : '120px',
+    width: fullWidth ? '100%' : undefined,
+    borderRadius: '980px',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    transition: 'background-color 120ms ease, color 120ms ease, border-color 120ms ease',
+    letterSpacing: '-0.022em',
+  };
+  if (primary) {
+    return (
+      <button
+        type={type ?? 'button'}
+        onClick={onClick}
+        disabled={disabled}
+        style={{
+          ...base,
+          background: ACCENT,
+          color: '#000000',
+          border: `1px solid ${ACCENT}`,
+        }}
+        onMouseEnter={(e) => {
+          if (disabled) return;
+          e.currentTarget.style.background = ACCENT_HOVER;
+          e.currentTarget.style.borderColor = ACCENT_HOVER;
+        }}
+        onMouseLeave={(e) => {
+          if (disabled) return;
+          e.currentTarget.style.background = ACCENT;
+          e.currentTarget.style.borderColor = ACCENT;
+        }}
+      >
+        {children}
+      </button>
+    );
+  }
+  return (
+    <button
+      type={type ?? 'button'}
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        ...base,
+        background: 'transparent',
+        color: ACCENT,
+        border: `1px solid ${ACCENT}`,
+      }}
+    >
+      {children}
+    </button>
   );
 }

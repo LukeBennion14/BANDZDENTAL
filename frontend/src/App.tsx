@@ -11,6 +11,7 @@ import ReviewQueue from './pages/ReviewQueue'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Landing from './pages/Landing'
+import Pricing from './pages/Pricing'
 import { getSession } from './auth'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -23,6 +24,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/app" element={<RequireAuth><Layout /></RequireAuth>}>
             <Route index element={<Navigate to="/app/dashboard" replace />} />
