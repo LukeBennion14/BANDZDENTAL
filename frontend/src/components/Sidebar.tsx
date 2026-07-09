@@ -20,52 +20,97 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-[180px] min-h-screen bg-bg-secondary flex flex-col">
-      {/* Logo - pushed down from top */}
-      <div style={{ paddingTop: '20px', paddingBottom: '28px', paddingLeft: '33px' }}>
+    <aside
+      style={{
+        width: '220px',
+        minHeight: '100vh',
+        background: '#000000',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: '1px solid rgba(255,255,255,0.06)',
+        padding: '28px 16px 24px',
+      }}
+    >
+      {/* Logo */}
+      <div style={{ padding: '4px 12px 40px' }}>
         <img
           src="/BANDZLOGO.jpg"
           alt="BANDZ"
-          className="h-12 w-auto object-contain mix-blend-screen"
+          style={{
+            height: '32px',
+            width: 'auto',
+            objectFit: 'contain',
+            mixBlendMode: 'screen',
+          }}
         />
       </div>
 
-      {/* Navigation - with gap from logo */}
-      <nav className="flex-1" style={{ paddingLeft: '12px', paddingRight: '25px' }}>
-        <ul className="flex flex-col gap-5">
+      {/* Navigation */}
+      <nav style={{ flex: 1 }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {navItems.map((item) => (
             <li key={item.path}>
               <NavLink
                 to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 pl-16 pr-4 py-3.5 rounded-xl transition-all duration-200 ${
-                    isActive
-                      ? 'text-green-primary font-semibold text-lg'
-                      : 'text-white/85 hover:text-white text-[0.9375rem]'
-                  }`
-                }
+                style={({ isActive }) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '11px 14px',
+                  borderRadius: '12px',
+                  textDecoration: 'none',
+                  fontSize: '14px',
+                  fontWeight: isActive ? 600 : 500,
+                  letterSpacing: '-0.012em',
+                  color: isActive ? '#4ade80' : 'rgba(245,245,247,0.72)',
+                  background: isActive ? 'rgba(74,222,128,0.10)' : 'transparent',
+                  transition: 'background-color 120ms ease, color 120ms ease',
+                })}
               >
                 {({ isActive }) => (
                   <>
-                    <item.icon size={isActive ? 22 : 20} strokeWidth={1.5} />
+                    <item.icon size={18} strokeWidth={1.75} />
                     <span>{item.label}</span>
                   </>
                 )}
               </NavLink>
             </li>
           ))}
-          {/* Logout - same styling and gap-5 as other nav items */}
-          <li>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 text-white/85 hover:bg-white/5 hover:text-white w-full"
-            >
-              <LogOut size={20} strokeWidth={1.5} />
-              <span className="text-[0.9375rem]">Logout</span>
-            </button>
-          </li>
         </ul>
       </nav>
+
+      {/* Logout — pinned to bottom, subtle */}
+      <button
+        onClick={handleLogout}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          padding: '11px 14px',
+          borderRadius: '12px',
+          fontSize: '14px',
+          fontWeight: 500,
+          letterSpacing: '-0.012em',
+          color: 'rgba(245,245,247,0.62)',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          transition: 'background-color 120ms ease, color 120ms ease',
+          marginTop: '8px',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+          e.currentTarget.style.color = '#f5f5f7';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.color = 'rgba(245,245,247,0.62)';
+        }}
+      >
+        <LogOut size={18} strokeWidth={1.75} />
+        <span>Logout</span>
+      </button>
     </aside>
   );
 }

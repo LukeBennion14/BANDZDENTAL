@@ -34,6 +34,22 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Dev-only bypass: stripped from production builds
+    if (import.meta.env.DEV && email === 'demo@bandz.local') {
+      saveSession({
+        id: 1,
+        name: 'Dr. Demo',
+        email,
+        practiceId: 1,
+        practiceName: 'Demo Practice',
+        practiceCode: 'DEMO01',
+      });
+      navigate('/app/dashboard', { replace: true });
+      setLoading(false);
+      return;
+    }
+
     try {
       const session = await fetchAPI<OrthoSession>('/api/login', {
         method: 'POST',

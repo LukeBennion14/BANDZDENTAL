@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { SlidersHorizontal, Users } from 'lucide-react';
+import { Search, SlidersHorizontal, Users } from 'lucide-react';
 import { patientsAPI } from '../api/services';
 import type { Patient } from '../api/services';
 
 type SortField = 'name' | 'treatmentDays' | 'status';
 type SortDir = 'asc' | 'desc';
+
+const APPLE_FONT =
+  '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif';
+
+const ACCENT = '#4ade80';
+const TEXT_PRIMARY = '#f5f5f7';
+const TEXT_MUTED = '#86868b';
+const BORDER = 'rgba(255,255,255,0.08)';
+const CARD_BG = '#0b0b0d';
+const ROW_HOVER = 'rgba(255,255,255,0.03)';
 
 function treatmentDays(patient: Patient): number {
   const start = patient.created_at ? new Date(patient.created_at) : new Date();
@@ -13,7 +23,7 @@ function treatmentDays(patient: Patient): number {
 }
 
 function initials(name: string) {
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 }
 
 export default function Patients() {
@@ -27,22 +37,26 @@ export default function Patients() {
   const [showFilter, setShowFilter] = useState(false);
 
   useEffect(() => {
-    patientsAPI.getAll()
+    patientsAPI
+      .getAll()
       .then(setPatientList)
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
   const toggleSort = (field: SortField) => {
-    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortField(field); setSortDir('asc'); }
+    if (sortField === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    else {
+      setSortField(field);
+      setSortDir('asc');
+    }
   };
 
   const activeFilterCount = filterStatus.length;
 
   const filtered = patientList
-    .filter(p => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    .filter(p => filterStatus.length === 0 || filterStatus.includes(p.status));
+    .filter((p) => !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((p) => filterStatus.length === 0 || filterStatus.includes(p.status));
 
   const sorted = sortField
     ? [...filtered].sort((a, b) => {
@@ -54,44 +68,125 @@ export default function Patients() {
           return sortDir === 'asc' ? diff : -diff;
         }
         if (sortField === 'status') {
-          return sortDir === 'asc' ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status);
+          return sortDir === 'asc'
+            ? a.status.localeCompare(b.status)
+            : b.status.localeCompare(a.status);
         }
         return 0;
       })
     : filtered;
 
-  const SortIcon = ({ field }: { field: SortField }) => (
-    <span className={`text-xs ${sortField === field ? 'text-green-primary' : 'text-text-muted opacity-40'}`}>
+  const HEADER_CELL: React.CSSProperties = {
+    textAlign: 'left',
+    padding: '20px 32px',
+    fontFamily: APPLE_FONT,
+    fontSize: '12px',
+    fontWeight: 600,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: TEXT_MUTED,
+    userSelect: 'none',
+    borderBottom: `1px solid ${BORDER}`,
+  };
+
+  const SortIndicator = ({ field }: { field: SortField }) => (
+    <span
+      style={{
+        marginLeft: '8px',
+        fontSize: '11px',
+        color: sortField === field ? ACCENT : 'rgba(245,245,247,0.25)',
+      }}
+    >
       {sortField === field && sortDir === 'desc' ? '↓' : '↑'}
     </span>
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full min-h-[calc(100vh-8rem)]">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4" style={{ paddingTop: '0.5rem', paddingLeft: '1rem', paddingRight: '1rem' }}>
-        <div className="flex items-center gap-3">
-          <input
-            type="text"
-            placeholder="Search patients..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="h-11 bg-bg-secondary border border-border rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-green-primary/50 w-64 transition-all px-4"
-          />
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', fontFamily: APPLE_FONT }}>
+      {/* ── Toolbar ── */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '16px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Search */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              height: '44px',
+              padding: '0 16px',
+              width: '320px',
+              borderRadius: '14px',
+              background: 'rgba(255,255,255,0.04)',
+              border: `1px solid ${BORDER}`,
+            }}
+          >
+            <Search size={16} style={{ color: 'rgba(245,245,247,0.5)' }} />
+            <input
+              type="text"
+              placeholder="Search patients..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: TEXT_PRIMARY,
+                fontSize: '14px',
+                width: '100%',
+                fontFamily: APPLE_FONT,
+                letterSpacing: '-0.012em',
+              }}
+            />
+          </div>
 
-          <div className="relative">
+          {/* Filter */}
+          <div style={{ position: 'relative' }}>
             <button
-              onClick={() => setShowFilter(v => !v)}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl border transition-colors text-sm font-medium ${
-                activeFilterCount > 0
-                  ? 'bg-green-primary/10 border-green-primary/40 text-green-primary'
-                  : 'bg-bg-secondary border-border text-text-secondary hover:text-text-primary'
-              }`}
+              onClick={() => setShowFilter((v) => !v)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                height: '44px',
+                padding: '0 18px',
+                borderRadius: '14px',
+                fontSize: '14px',
+                fontWeight: 500,
+                fontFamily: APPLE_FONT,
+                letterSpacing: '-0.012em',
+                cursor: 'pointer',
+                transition: 'background-color 120ms ease, color 120ms ease',
+                background:
+                  activeFilterCount > 0 ? 'rgba(74,222,128,0.10)' : 'rgba(255,255,255,0.04)',
+                color: activeFilterCount > 0 ? ACCENT : 'rgba(245,245,247,0.72)',
+                border: `1px solid ${activeFilterCount > 0 ? 'rgba(74,222,128,0.32)' : BORDER}`,
+              }}
             >
               <SlidersHorizontal size={15} />
               Filter
               {activeFilterCount > 0 && (
-                <span className="bg-green-primary text-black text-xs font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                <span
+                  style={{
+                    background: ACCENT,
+                    color: '#000',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    minWidth: '18px',
+                    height: '18px',
+                    padding: '0 6px',
+                    borderRadius: '999px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   {activeFilterCount}
                 </span>
               )}
@@ -99,28 +194,79 @@ export default function Patients() {
 
             {showFilter && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setShowFilter(false)} />
-                <div className="absolute left-0 top-full mt-2 z-40 w-48 bg-bg-secondary border border-border rounded-2xl shadow-2xl p-5">
-                  <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Status</p>
-                  <div className="flex flex-col gap-2">
-                    {['active', 'paused'].map(s => (
-                      <label key={s} className="flex items-center gap-3 cursor-pointer">
+                <div
+                  style={{ position: 'fixed', inset: 0, zIndex: 30 }}
+                  onClick={() => setShowFilter(false)}
+                />
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 'calc(100% + 8px)',
+                    zIndex: 40,
+                    width: '220px',
+                    background: CARD_BG,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: '18px',
+                    padding: '20px',
+                    boxShadow: '0 30px 80px rgba(0,0,0,0.55)',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      color: TEXT_MUTED,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.14em',
+                      marginBottom: '14px',
+                    }}
+                  >
+                    Status
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {['active', 'paused'].map((s) => (
+                      <label
+                        key={s}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          color: TEXT_PRIMARY,
+                          textTransform: 'capitalize',
+                        }}
+                      >
                         <input
                           type="checkbox"
                           checked={filterStatus.includes(s)}
-                          onChange={() => setFilterStatus(prev =>
-                            prev.includes(s) ? prev.filter(v => v !== s) : [...prev, s]
-                          )}
-                          className="w-4 h-4 rounded accent-green-primary"
+                          onChange={() =>
+                            setFilterStatus((prev) =>
+                              prev.includes(s) ? prev.filter((v) => v !== s) : [...prev, s]
+                            )
+                          }
+                          style={{ width: '16px', height: '16px', accentColor: ACCENT }}
                         />
-                        <span className="text-sm text-text-secondary capitalize">{s}</span>
+                        {s}
                       </label>
                     ))}
                   </div>
                   {activeFilterCount > 0 && (
                     <button
                       onClick={() => setFilterStatus([])}
-                      className="w-full text-sm text-text-muted hover:text-red-400 transition-colors text-center py-2 border-t border-border mt-4 pt-4"
+                      style={{
+                        width: '100%',
+                        marginTop: '16px',
+                        paddingTop: '14px',
+                        borderTop: `1px solid ${BORDER}`,
+                        fontSize: '13px',
+                        color: TEXT_MUTED,
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontFamily: APPLE_FONT,
+                      }}
                     >
                       Clear filters
                     </button>
@@ -131,91 +277,212 @@ export default function Patients() {
           </div>
         </div>
 
-        <div className="text-sm text-text-muted">
+        <div style={{ fontSize: '14px', color: TEXT_MUTED, letterSpacing: '-0.012em' }}>
           {patientList.length} patient{patientList.length !== 1 ? 's' : ''}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card p-0 overflow-hidden flex-1">
+      {/* ── Table card ── */}
+      <div
+        style={{
+          background: CARD_BG,
+          border: `1px solid ${BORDER}`,
+          borderRadius: '22px',
+          overflow: 'hidden',
+        }}
+      >
         {loading ? (
-          <div className="flex items-center justify-center h-40 text-text-muted">Loading…</div>
+          <div
+            style={{
+              padding: '80px 0',
+              textAlign: 'center',
+              color: TEXT_MUTED,
+              fontSize: '14px',
+            }}
+          >
+            Loading…
+          </div>
         ) : (
-          <table className="w-full">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr className="border-b border-border">
+              <tr>
                 <th
-                  className="text-left py-5 px-8 text-xs font-semibold text-text-muted uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors select-none"
+                  style={{ ...HEADER_CELL, cursor: 'pointer' }}
                   onClick={() => toggleSort('name')}
                 >
-                  <div className="flex items-center gap-1.5">Name <SortIcon field="name" /></div>
+                  Name
+                  <SortIndicator field="name" />
                 </th>
-                <th className="text-left py-5 px-6 text-xs font-semibold text-text-muted uppercase tracking-wider">
-                  Email
-                </th>
+                <th style={HEADER_CELL}>Email</th>
                 <th
-                  className="text-left py-5 px-6 text-xs font-semibold text-text-muted uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors select-none"
+                  style={{ ...HEADER_CELL, cursor: 'pointer' }}
                   onClick={() => toggleSort('status')}
                 >
-                  <div className="flex items-center gap-1.5">Status <SortIcon field="status" /></div>
+                  Status
+                  <SortIndicator field="status" />
                 </th>
                 <th
-                  className="text-right py-5 px-8 text-xs font-semibold text-text-muted uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors select-none"
+                  style={{ ...HEADER_CELL, textAlign: 'right', cursor: 'pointer' }}
                   onClick={() => toggleSort('treatmentDays')}
                 >
-                  <div className="flex items-center justify-end gap-1.5">Days <SortIcon field="treatmentDays" /></div>
+                  Days
+                  <SortIndicator field="treatmentDays" />
                 </th>
               </tr>
             </thead>
             <tbody>
               {sorted.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-20 text-center">
-                    <div className="flex flex-col items-center gap-3 text-text-muted">
-                      <Users size={36} className="opacity-30" />
-                      <p className="font-medium text-text-secondary">No patients found</p>
-                      <p className="text-sm">Patients join by signing up in the app with your practice code</p>
+                  <td colSpan={4} style={{ padding: '96px 0' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '14px',
+                        color: TEXT_MUTED,
+                      }}
+                    >
+                      <Users size={40} style={{ opacity: 0.3 }} />
+                      <p
+                        style={{
+                          fontSize: '17px',
+                          fontWeight: 600,
+                          color: TEXT_PRIMARY,
+                          letterSpacing: '-0.012em',
+                          margin: 0,
+                        }}
+                      >
+                        No patients found
+                      </p>
+                      <p style={{ fontSize: '14px', margin: 0, maxWidth: '380px', textAlign: 'center' }}>
+                        Patients join by signing up in the app with your practice code.
+                      </p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                sorted.map(patient => (
+                sorted.map((patient, idx) => (
                   <tr
                     key={patient.id}
                     onClick={() => navigate(`/app/patients/${patient.id}`)}
-                    className="border-b border-border hover:bg-bg-tertiary/30 transition-colors cursor-pointer"
+                    style={{
+                      cursor: 'pointer',
+                      borderBottom: idx < sorted.length - 1 ? `1px solid ${BORDER}` : 'none',
+                      transition: 'background-color 120ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = ROW_HOVER;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
                   >
                     {/* Name */}
-                    <td className="py-5 px-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-full bg-green-primary/20 border border-green-primary/30 flex items-center justify-center flex-shrink-0">
-                          <span className="text-green-primary font-semibold text-sm">{initials(patient.name)}</span>
+                    <td style={{ padding: '22px 32px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div
+                          style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '999px',
+                            background: 'rgba(74,222,128,0.14)',
+                            border: '1px solid rgba(74,222,128,0.28)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: ACCENT,
+                              fontSize: '13px',
+                              fontWeight: 600,
+                              letterSpacing: '-0.012em',
+                            }}
+                          >
+                            {initials(patient.name)}
+                          </span>
                         </div>
                         <div>
-                          <p className="text-text-primary font-medium">{patient.name}</p>
+                          <p
+                            style={{
+                              fontSize: '15px',
+                              fontWeight: 600,
+                              color: TEXT_PRIMARY,
+                              margin: 0,
+                              letterSpacing: '-0.012em',
+                            }}
+                          >
+                            {patient.name}
+                          </p>
                           {patient.phone && (
-                            <p className="text-xs text-text-muted">{patient.phone}</p>
+                            <p
+                              style={{
+                                fontSize: '12px',
+                                color: TEXT_MUTED,
+                                marginTop: '4px',
+                              }}
+                            >
+                              {patient.phone}
+                            </p>
                           )}
                         </div>
                       </div>
                     </td>
 
                     {/* Email */}
-                    <td className="py-5 px-6 text-text-secondary text-sm">{patient.email ?? '—'}</td>
+                    <td
+                      style={{
+                        padding: '22px 32px',
+                        fontSize: '14px',
+                        color: 'rgba(245,245,247,0.72)',
+                        letterSpacing: '-0.012em',
+                      }}
+                    >
+                      {patient.email ?? '—'}
+                    </td>
 
                     {/* Status */}
-                    <td className="py-5 px-6">
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        patient.status === 'active'
-                          ? 'bg-green-primary/15 text-green-primary'
-                          : 'bg-yellow-400/15 text-yellow-400'
-                      }`}>
+                    <td style={{ padding: '22px 32px' }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          padding: '5px 12px',
+                          borderRadius: '999px',
+                          textTransform: 'capitalize',
+                          letterSpacing: '-0.005em',
+                          background:
+                            patient.status === 'active'
+                              ? 'rgba(74,222,128,0.14)'
+                              : 'rgba(250,204,21,0.14)',
+                          color: patient.status === 'active' ? ACCENT : '#facc15',
+                          border: `1px solid ${
+                            patient.status === 'active'
+                              ? 'rgba(74,222,128,0.28)'
+                              : 'rgba(250,204,21,0.28)'
+                          }`,
+                        }}
+                      >
                         {patient.status}
                       </span>
                     </td>
 
                     {/* Days */}
-                    <td className="py-5 px-8 text-right text-text-secondary text-sm">
+                    <td
+                      style={{
+                        padding: '22px 32px',
+                        textAlign: 'right',
+                        fontSize: '14px',
+                        color: 'rgba(245,245,247,0.72)',
+                        fontVariantNumeric: 'tabular-nums',
+                        letterSpacing: '-0.012em',
+                      }}
+                    >
                       {treatmentDays(patient)}d
                     </td>
                   </tr>

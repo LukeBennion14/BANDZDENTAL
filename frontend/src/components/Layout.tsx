@@ -3,32 +3,43 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/insight': 'Insights',
-  '/schedule': 'Schedule',
-  '/patients': 'Patients',
-  '/settings': 'Settings',
+  '/app/dashboard': 'Dashboard',
+  '/app/insight': 'Insights',
+  '/app/schedule': 'Schedule',
+  '/app/patients': 'Patients',
+  '/app/review': 'Review',
+  '/app/settings': 'Settings',
 };
 
 export default function Layout() {
   const location = useLocation();
-  
-  // Get title, handling dynamic routes
+
   let title = pageTitles[location.pathname] || 'Dashboard';
-  if (location.pathname.startsWith('/patients/') && location.pathname.includes('/review')) {
+  if (location.pathname.startsWith('/app/patients/') && location.pathname.includes('/review')) {
     title = 'Review Photos';
-  } else if (location.pathname.startsWith('/patients/') && location.pathname !== '/patients') {
+  } else if (location.pathname.startsWith('/app/patients/') && location.pathname !== '/app/patients') {
     title = 'Patient Profile';
   }
 
   return (
-    <div className="flex min-h-screen bg-black">
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: '#000000',
+      }}
+    >
       <Sidebar />
-      {/* 40px black gap between sidebar and content */}
-      <div className="w-[40px] bg-black flex-shrink-0" />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Header title={title} />
-        <main className="flex-1 pt-10 px-10 pb-10 overflow-auto bg-bg-primary">
+        <main
+          style={{
+            flex: 1,
+            padding: '32px',
+            overflow: 'auto',
+            background: '#000000',
+          }}
+        >
           <Outlet />
         </main>
       </div>

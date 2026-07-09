@@ -1,10 +1,25 @@
 import { useState } from 'react';
-import { Bell, MessageSquare, AlertTriangle, CheckCircle, Info, X } from 'lucide-react';
+import { Bell, MessageSquare, AlertTriangle, CheckCircle, Info, X, Search } from 'lucide-react';
 import { mockNotifications } from '../data/mockData';
 
 interface HeaderProps {
   title: string;
 }
+
+const HEADER_ICON_BTN: React.CSSProperties = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '12px',
+  background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'rgba(245,245,247,0.72)',
+  cursor: 'pointer',
+  transition: 'background-color 120ms ease, color 120ms ease',
+  padding: 0,
+};
 
 export default function Header({ title }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -21,33 +36,119 @@ export default function Header({ title }: HeaderProps) {
   };
 
   const NotifIcon = ({ type }: { type: string }) => {
-    if (type === 'warning') return <AlertTriangle size={14} className="text-yellow-400" />;
-    if (type === 'success') return <CheckCircle size={14} className="text-green-primary" />;
-    return <Info size={14} className="text-blue-400" />;
+    if (type === 'warning') return <AlertTriangle size={14} style={{ color: '#facc15' }} />;
+    if (type === 'success') return <CheckCircle size={14} style={{ color: '#4ade80' }} />;
+    return <Info size={14} style={{ color: '#60a5fa' }} />;
   };
 
   return (
-    <header className="h-[5.5rem] bg-bg-primary flex items-center justify-between px-10 rounded-l-xl" style={{ marginBottom: '2rem' }}>
+    <header
+      style={{
+        height: '72px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 32px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
       {/* Title */}
-      <div className="flex-1" style={{ paddingLeft: '3rem' }}>
-        <h1 className="font-display text-[2rem] font-semibold text-text-primary tracking-tight">{title}</h1>
-      </div>
+      <h1
+        style={{
+          fontFamily: 'inherit',
+          fontSize: '24px',
+          fontWeight: 600,
+          letterSpacing: '-0.005em',
+          color: '#f5f5f7',
+          margin: 0,
+        }}
+      >
+        {title}
+      </h1>
 
       {/* Actions */}
-      <div className="flex items-center gap-4">
-        <button className="w-11 h-11 rounded-xl bg-bg-secondary border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-all">
-          <MessageSquare size={18} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Search */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            height: '40px',
+            padding: '0 14px',
+            width: '220px',
+            borderRadius: '12px',
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          <Search size={15} style={{ color: 'rgba(245,245,247,0.5)' }} />
+          <input
+            type="text"
+            placeholder="Search"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: '#f5f5f7',
+              fontSize: '14px',
+              width: '100%',
+              fontFamily: 'inherit',
+              letterSpacing: '-0.012em',
+            }}
+          />
+        </div>
+
+        {/* Messages */}
+        <button
+          style={HEADER_ICON_BTN}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.color = '#f5f5f7';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+            e.currentTarget.style.color = 'rgba(245,245,247,0.72)';
+          }}
+        >
+          <MessageSquare size={17} />
         </button>
 
-        {/* Bell with notifications dropdown */}
-        <div className="relative">
+        {/* Bell */}
+        <div style={{ position: 'relative' }}>
           <button
             onClick={() => setShowNotifications(v => !v)}
-            className="w-11 h-11 rounded-xl bg-bg-secondary border border-border flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-tertiary transition-all relative"
+            style={HEADER_ICON_BTN}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+              e.currentTarget.style.color = '#f5f5f7';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
+              e.currentTarget.style.color = 'rgba(245,245,247,0.72)';
+            }}
           >
-            <Bell size={18} />
+            <Bell size={17} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-green-primary rounded-full flex items-center justify-center text-[10px] font-bold text-black px-1">
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  minWidth: '18px',
+                  height: '18px',
+                  background: '#4ade80',
+                  borderRadius: '999px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  color: '#000000',
+                  padding: '0 5px',
+                  border: '2px solid #000000',
+                }}
+              >
                 {unreadCount}
               </span>
             )}
@@ -56,16 +157,48 @@ export default function Header({ title }: HeaderProps) {
           {showNotifications && (
             <>
               <div
-                className="fixed inset-0 z-40"
+                style={{ position: 'fixed', inset: 0, zIndex: 40 }}
                 onClick={() => setShowNotifications(false)}
               />
-              <div className="absolute right-0 top-full mt-2 z-50 w-[360px] bg-bg-secondary border border-border rounded-2xl shadow-2xl overflow-hidden">
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 'calc(100% + 8px)',
+                  zIndex: 50,
+                  width: '360px',
+                  background: '#0b0b0d',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  boxShadow: '0 30px 80px rgba(0,0,0,0.55)',
+                }}
+              >
                 {/* Panel header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-                  <div className="flex items-center gap-2.5">
-                    <h3 className="font-display font-semibold text-text-primary">Notifications</h3>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '18px 20px',
+                    borderBottom: '1px solid rgba(255,255,255,0.06)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#f5f5f7', margin: 0, letterSpacing: '-0.005em' }}>
+                      Notifications
+                    </h3>
                     {unreadCount > 0 && (
-                      <span className="bg-green-primary text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                      <span
+                        style={{
+                          background: '#4ade80',
+                          color: '#000000',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          padding: '2px 8px',
+                          borderRadius: '999px',
+                        }}
+                      >
                         {unreadCount}
                       </span>
                     )}
@@ -73,7 +206,16 @@ export default function Header({ title }: HeaderProps) {
                   {unreadCount > 0 && (
                     <button
                       onClick={markAllRead}
-                      className="text-xs text-text-muted hover:text-green-primary transition-colors font-medium"
+                      style={{
+                        fontSize: '12px',
+                        color: '#4ade80',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        fontFamily: 'inherit',
+                        fontWeight: 500,
+                      }}
                     >
                       Mark all read
                     </button>
@@ -81,35 +223,56 @@ export default function Header({ title }: HeaderProps) {
                 </div>
 
                 {/* Notifications list */}
-                <div className="max-h-[380px] overflow-y-auto">
+                <div style={{ maxHeight: '380px', overflowY: 'auto' }}>
                   {notifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-text-muted">
-                      <Bell size={28} className="mb-3 opacity-40" />
-                      <p className="text-sm">No notifications</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 0', color: 'rgba(245,245,247,0.5)' }}>
+                      <Bell size={28} style={{ marginBottom: '12px', opacity: 0.4 }} />
+                      <p style={{ fontSize: '14px', margin: 0 }}>No notifications</p>
                     </div>
                   ) : (
                     notifications.map(n => (
                       <div
                         key={n.id}
-                        className={`flex items-start gap-3 px-5 py-4 border-b border-border last:border-0 transition-colors ${
-                          !n.read ? 'bg-white/[0.02]' : ''
-                        }`}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: '12px',
+                          padding: '16px 20px',
+                          borderBottom: '1px solid rgba(255,255,255,0.06)',
+                          background: !n.read ? 'rgba(255,255,255,0.02)' : 'transparent',
+                        }}
                       >
-                        <div className="mt-0.5 flex-shrink-0">
+                        <div style={{ marginTop: '2px', flexShrink: 0 }}>
                           <NotifIcon type={n.type} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm leading-snug ${n.read ? 'text-text-secondary' : 'text-text-primary font-medium'}`}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p
+                            style={{
+                              fontSize: '13px',
+                              lineHeight: 1.45,
+                              color: n.read ? 'rgba(245,245,247,0.72)' : '#f5f5f7',
+                              fontWeight: n.read ? 400 : 500,
+                              margin: 0,
+                            }}
+                          >
                             {n.message}
                           </p>
-                          <p className="text-xs text-text-muted mt-1">{n.time}</p>
+                          <p style={{ fontSize: '11px', color: 'rgba(245,245,247,0.5)', marginTop: '4px' }}>{n.time}</p>
                         </div>
                         {!n.read && (
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-primary mt-2 flex-shrink-0" />
+                          <div style={{ width: '6px', height: '6px', borderRadius: '999px', background: '#4ade80', marginTop: '6px', flexShrink: 0 }} />
                         )}
                         <button
                           onClick={() => dismiss(n.id)}
-                          className="text-text-muted hover:text-text-secondary transition-colors flex-shrink-0 mt-0.5"
+                          style={{
+                            color: 'rgba(245,245,247,0.5)',
+                            background: 'transparent',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                            marginTop: '2px',
+                            flexShrink: 0,
+                          }}
                         >
                           <X size={13} />
                         </button>
@@ -122,20 +285,21 @@ export default function Header({ title }: HeaderProps) {
           )}
         </div>
 
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Search"
-          className="h-11 bg-bg-secondary border border-border rounded-xl text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-green-primary/50 w-48 transition-all ml-2"
-          style={{ paddingLeft: '1rem', paddingRight: '1rem' }}
-        />
-
         {/* Avatar */}
-        <div className="w-11 h-11 rounded-xl bg-bg-tertiary overflow-hidden border border-border ml-2" style={{ marginRight: '1rem' }}>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '999px',
+            overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.08)',
+            marginLeft: '4px',
+          }}
+        >
           <img
             src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face"
             alt="Dr. Edwin Bennion"
-            className="w-full h-full object-cover"
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
       </div>
