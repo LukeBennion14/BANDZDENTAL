@@ -1,5 +1,9 @@
 // API Configuration
-export const API_BASE_URL = 'http://localhost:3001';
+// Priority: explicit VITE_API_URL > production default > localhost dev default.
+// The production default lets deployed builds work even if VITE_API_URL isn't wired up on Vercel.
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL?.trim() ||
+  (import.meta.env.PROD ? 'https://bandz-backend.vercel.app' : 'http://localhost:3001');
 
 // Default headers
 export const defaultHeaders = {
