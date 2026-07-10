@@ -5,6 +5,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { HomeScreen, CameraScreen } from './src/screens';
 import { healthAPI } from './src/api';
+import { usePushRegistration } from './src/hooks/usePushRegistration';
+
+// Same demo patient id used throughout HomeScreen. Real auth would replace this
+// with the logged-in patient's id after login.
+const DEMO_PATIENT_ID = 1;
 
 export type RootStackParamList = {
   Home: undefined;
@@ -15,6 +20,10 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+
+  // Prompts for notification permission on first launch and registers the APNs
+  // device token with the backend so /api/notify/trigger can reach this device.
+  usePushRegistration(DEMO_PATIENT_ID);
 
   useEffect(() => {
     const checkConnection = async () => {

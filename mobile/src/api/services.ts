@@ -51,10 +51,17 @@ export const patientAPI = {
     fetchAPI<DailyPrompt[]>(`/api/patients/${patientId}/prompts/today`),
   
   // Submit a photo
-  submitPhoto: (promptId: number, imageUrl: string) => 
+  submitPhoto: (promptId: number, imageUrl: string) =>
     fetchAPI<PhotoSubmission>('/api/patients/photo', {
       method: 'POST',
       body: JSON.stringify({ promptId, imageUrl }),
+    }),
+
+  // Register the device's APNs push token so the backend can notify this patient
+  registerPushToken: (patientId: number, token: string, env: 'production' | 'sandbox') =>
+    fetchAPI<{ success: boolean }>('/api/patients/push-token', {
+      method: 'POST',
+      body: JSON.stringify({ patientId, token, env }),
     }),
 };
 
