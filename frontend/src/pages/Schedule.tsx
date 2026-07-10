@@ -91,6 +91,18 @@ function weekDates(monday: Date): string[] {
   });
 }
 
+// API returns date as ISO "2026-07-06T00:00:00.000Z"; strip to "2026-07-06".
+function normalizeDate(d: string): string {
+  return d.split('T')[0];
+}
+
+// Edit-state key. Uses `|` so the YYYY-MM-DD date is safe to split back out.
+const editKey = (date: string, slot: number) => `${date}|${slot}`;
+const parseEditKey = (key: string) => {
+  const idx = key.lastIndexOf('|');
+  return { date: key.slice(0, idx), slot: parseInt(key.slice(idx + 1), 10) };
+};
+
 export default function Schedule() {
   const { toast } = useToast();
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()));
@@ -106,7 +118,7 @@ export default function Schedule() {
     setLoading(true);
     try {
       const data = await fetchAPI<SlotRow[]>(`/api/schedule?weekStart=${dates[0]}`);
-      setRows(data);
+      setRows(data.map((r) => ({ ...r, date: normalizeDate(r.date) })));
     } catch {
       toast('Failed to load schedule');
     } finally {
@@ -119,7 +131,7 @@ export default function Schedule() {
   }, [load]);
 
   function getTime(date: string, slot: number): string {
-    const key = `${date}-${slot}`;
+    const key = editKey(date, slot);
     if (edits[key] !== undefined) return edits[key];
     return rows.find((r) => r.date === date && r.slot === slot)?.notification_time ?? '';
   }
@@ -133,7 +145,7 @@ export default function Schedule() {
 
     let errors = 0;
     for (const [key, rawTime] of updates) {
-      const [date, slotStr] = key.split('-');
+      const { date, slot } = parseEditKey(key);
       const time = to24h(rawTime);
       if (!time) {
         errors++;
@@ -142,7 +154,7 @@ export default function Schedule() {
       try {
         await fetchAPI('/api/schedule/slot', {
           method: 'PUT',
-          body: JSON.stringify({ date, slot: parseInt(slotStr), time }),
+          body: JSON.stringify({ date, slot, time }),
         });
       } catch {
         errors++;
@@ -163,7 +175,7 @@ export default function Schedule() {
         method: 'POST',
         body: JSON.stringify({ weekStart: dates[0] }),
       });
-      setRows(data);
+      setRows(data.map((r) => ({ ...r, date: normalizeDate(r.date) })));
       setEdits({});
       toast('Schedule randomized');
     } catch {
@@ -368,7 +380,7 @@ export default function Schedule() {
                       }}
                     >
                       {dates.map((date) => {
-                        const key = `${date}-${slot}`;
+                        const key = editKey(date, slot);
                         const time = getTime(date, slot);
                         return (
                           <SlotTile
