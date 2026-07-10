@@ -81,26 +81,37 @@ router.get('/:id', async (req, res) => {
     const patient = patientResult.rows[0];
     const m7 = sevenDayMetrics.rows[0];
     const m30 = thirtyDayMetrics.rows[0];
-    
+
+    // Calculate expected slots based on days since account creation (capped at 30)
+    const joinedAt = new Date(patient.created_at);
+    const daysSinceJoined = Math.floor((Date.now() - joinedAt.getTime()) / 86400000);
+    const daysInWindow7 = Math.min(daysSinceJoined, 7);
+    const daysInWindow30 = Math.min(daysSinceJoined, 30);
+    const expected7 = daysInWindow7 * 3;
+    const expected30 = daysInWindow30 * 3;
+
+    const total7 = parseInt(m7.total) || 0;
+    const total30 = parseInt(m30.total) || 0;
+
     res.json({
       ...patient,
       metrics: {
         last7Days: {
-          compliancePct: parseInt(m7.reviewed) > 0 
-            ? Math.round((parseInt(m7.band_present) / parseInt(m7.reviewed)) * 100) 
+          compliancePct: parseInt(m7.reviewed) > 0
+            ? Math.round((parseInt(m7.band_present) / parseInt(m7.reviewed)) * 100)
             : 0,
-          onTimePct: parseInt(m7.total) > 0 
-            ? Math.round((parseInt(m7.on_time) / parseInt(m7.total)) * 100) 
+          onTimePct: total7 > 0
+            ? Math.round((parseInt(m7.on_time) / total7) * 100)
             : 0,
         },
         last30Days: {
-          compliancePct: parseInt(m30.reviewed) > 0 
-            ? Math.round((parseInt(m30.band_present) / parseInt(m30.reviewed)) * 100) 
+          compliancePct: parseInt(m30.reviewed) > 0
+            ? Math.round((parseInt(m30.band_present) / parseInt(m30.reviewed)) * 100)
             : 0,
-          onTimePct: parseInt(m30.total) > 0 
-            ? Math.round((parseInt(m30.on_time) / parseInt(m30.total)) * 100) 
+          onTimePct: total30 > 0
+            ? Math.round((parseInt(m30.on_time) / total30) * 100)
             : 0,
-          missing: 90 - parseInt(m30.total), // 3 per day * 30 days
+          missing: Math.max(0, expected30 - total30),
         },
       },
     });
@@ -260,8 +271,12 @@ router.get('/:id/stats', async (req, res) => {
     const stats = onTimeResult.rows[0];
     const totalSnaps = parseInt(stats.total_snaps) || 0;
     const onTimeSnaps = parseInt(stats.on_time_snaps) || 0;
-    const onTimePct = totalSnaps > 0 ? Math.round((onTimeSnaps / totalSnaps) * 100) : 0;
     const days = parseInt(daysEnrolled.rows[0]?.days) || 1;
+    // Score denominator is expected slots (3 per day since joining), not just submissions.
+    // Missed slots (no submission by end of day) drag the score down instead of being ignored.
+    const expectedSlots = days * 3;
+    const denominator = Math.max(expectedSlots, totalSnaps);
+    const onTimePct = denominator > 0 ? Math.round((onTimeSnaps / denominator) * 100) : 0;
     const ranking = parseInt(rankingResult.rows[0]?.ranking) || 50;
     const wowChange = Math.round(parseFloat(wowResult.rows[0]?.change) || 0);
     
@@ -392,4 +407,169 @@ router.post('/photo', async (req, res) => {
   }
 });
 
+// POST /api/patients/push-token
+// iOS app calls this after requesting notification permission
+router.post('/push-token', async (req, res) => {
+  try {
+    const { patientId, token, env } = req.body;
+    if (!patientId || !token) {
+      return res.status(400).json({ error: 'patientId and token are required' });
+    }
+
+    await pool.query(
+      `UPDATE patients SET push_token = $1, push_token_env = $2 WHERE id = $3`,
+      [token, env || 'production', patientId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Push token error:', error);
+    res.status(500).json({ error: 'Failed to save push token' });
+  }
+});
+
+// Default slot windows (local time HH:MM — compared on device, not server)
+const DEFAULT_WINDOWS: Record<number, { open: string; close: string; notif: string }> = {
+  1: { open: '08:00', close: '12:00', notif: '08:00:00' },
+  2: { open: '12:00', close: '16:00', notif: '12:00:00' },
+  3: { open: '16:00', close: '21:00', notif: '16:00:00' },
+};
+
+// GET /api/patients/:id/today
+// Always ensures 3 daily prompts exist. Returns window open/close times so
+// the iOS app calculates open/locked/missed using the device's local clock.
+router.get('/:id/today', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Use the device's local date if provided (avoids UTC vs local timezone mismatch)
+    const today = (req.query.localDate as string) || new Date().toISOString().split('T')[0];
+
+    const patientResult = await pool.query(
+      'SELECT practice_id FROM patients WHERE id = $1',
+      [id]
+    );
+    if (patientResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+    const practiceId = patientResult.rows[0].practice_id;
+
+    // Auto-seed schedule_slots with defaults if missing for today
+    for (const slot of [1, 2, 3]) {
+      await pool.query(
+        `INSERT INTO schedule_slots (practice_id, date, slot, notification_time)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (practice_id, date, slot) DO NOTHING`,
+        [practiceId, today, slot, DEFAULT_WINDOWS[slot].notif]
+      );
+      // Always ensure today's daily_prompt exists
+      await pool.query(
+        `INSERT INTO daily_prompts (patient_id, date, slot)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (patient_id, date, slot) DO NOTHING`,
+        [id, today, slot]
+      );
+    }
+
+    // Fetch prompts + submissions + schedule times
+    const result = await pool.query(
+      `SELECT
+         dp.id as prompt_id,
+         dp.slot,
+         ss.notification_time,
+         ps.id as submission_id,
+         ps.photo_url,
+         ps.submitted_at,
+         ps.is_on_time,
+         ps.band_present,
+         ps.reviewed_by
+       FROM daily_prompts dp
+       JOIN patients p ON dp.patient_id = p.id
+       LEFT JOIN schedule_slots ss ON ss.practice_id = p.practice_id
+         AND ss.date = dp.date AND ss.slot = dp.slot
+       LEFT JOIN photo_submissions ps ON ps.daily_prompt_id = dp.id
+       WHERE dp.patient_id = $1 AND dp.date = $2
+       ORDER BY dp.slot`,
+      [id, today]
+    );
+
+    const slotLabels: Record<number, string> = { 1: 'Morning', 2: 'Afternoon', 3: 'Evening' };
+
+    res.json(result.rows.map(r => {
+      const defaults = DEFAULT_WINDOWS[r.slot];
+      // Parse stored notification_time → derive open/close window (2 hours)
+      // Always use the default windows — schedule_slots sets notification time but
+      // window open/close comes from the slot defaults until the schedule maker is wired up
+      const windowOpen = defaults.open;
+      const windowClose = defaults.close;
+
+      return {
+        promptId: r.prompt_id,
+        slot: r.slot,
+        label: slotLabels[r.slot] || `Slot ${r.slot}`,
+        windowOpen,   // "HH:MM" local time — iOS compares to device clock
+        windowClose,  // "HH:MM" local time
+        submitted: !!r.submission_id,
+        submission: r.submission_id ? {
+          id: r.submission_id,
+          photoUrl: r.photo_url,
+          submittedAt: r.submitted_at,
+          isOnTime: r.is_on_time,
+          reviewed: !!r.reviewed_by,
+          bandPresent: r.band_present,
+        } : null,
+      };
+    }));
+  } catch (error) {
+    console.error('Today endpoint error:', error);
+    res.status(500).json({ error: 'Failed to fetch today data' });
+  }
+});
+
+// GET /api/patients/:id/snaps?page=0&limit=20
+// Paginated snap history for "View more snaps" screen
+router.get('/:id/snaps', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const page = parseInt(req.query.page as string) || 0;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = page * limit;
+
+    const result = await pool.query(
+      `SELECT
+         dp.date,
+         dp.slot,
+         ps.id as submission_id,
+         ps.photo_url,
+         ps.submitted_at,
+         ps.is_on_time,
+         ps.band_present,
+         ps.reviewed_by
+       FROM daily_prompts dp
+       LEFT JOIN photo_submissions ps ON ps.daily_prompt_id = dp.id
+       WHERE dp.patient_id = $1
+       ORDER BY dp.date DESC, dp.slot
+       LIMIT $2 OFFSET $3`,
+      [id, limit, offset]
+    );
+
+    const slotLabels: Record<number, string> = { 1: 'Morning', 2: 'Afternoon', 3: 'Evening' };
+
+    res.json(result.rows.map(r => ({
+      date: r.date,
+      slot: r.slot,
+      slotLabel: slotLabels[r.slot] || `Slot ${r.slot}`,
+      submitted: !!r.submission_id,
+      photoUrl: r.photo_url || null,
+      submittedAt: r.submitted_at || null,
+      isOnTime: r.is_on_time,
+      bandPresent: r.band_present,
+      reviewed: !!r.reviewed_by,
+    })));
+  } catch (error) {
+    console.error('Snaps history error:', error);
+    res.status(500).json({ error: 'Failed to fetch snap history' });
+  }
+});
+
 export default router;
+
